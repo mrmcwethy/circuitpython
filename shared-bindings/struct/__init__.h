@@ -30,5 +30,8 @@
 char get_fmt_type(const char **fmt);
 mp_uint_t get_fmt_num(const char **p);
 void shared_modules_struct_pack_into_internal(mp_obj_t fmt_in, byte *p, byte* end_p, size_t n_args, const mp_obj_t *args);
+mp_uint_t calcsize_items(const char *fmt);
+mp_uint_t shared_modules_struct_calcsize(const char *fmt, char fmt_type);
+mp_obj_tuple_t * shared_modules_struct_unpack_from(const char * fmt, byte *p, byte *end_p);
 
 #endif  // MICROPY_INCLUDED_SHARED_BINDINGS_RANDOM___INIT___H

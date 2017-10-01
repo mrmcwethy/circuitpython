@@ -98,3 +98,73 @@ void shared_modules_struct_pack_into_internal(mp_obj_t fmt_in, byte *p, byte* en
         fmt++;
     }
 }
+
+mp_uint_t calcsize_items(const char *fmt) {
+    mp_uint_t cnt = 0;
+    while (*fmt) {
+        int num = 1;
+        if (unichar_isdigit(*fmt)) {
+            num = get_fmt_num(&fmt);
+            if (*fmt == 's') {
+                num = 1;
+            }
+        }
+        cnt += num;
+        fmt++;
+    }
+    return cnt;
+}
+
+mp_uint_t shared_modules_struct_calcsize(const char *fmt, char fmt_type) {
+    mp_uint_t size;
+    for (size = 0; *fmt; fmt++) {
+        mp_uint_t cnt = 1;
+        if (unichar_isdigit(*fmt)) {
+            cnt = get_fmt_num(&fmt);
+        }
+
+        if (*fmt == 's') {
+            size += cnt;
+        } else {
+            mp_uint_t align;
+            size_t sz = mp_binary_get_size(fmt_type, *fmt, &align);
+            while (cnt--) {
+                // Apply alignment
+                size = (size + align - 1) & ~(align - 1);
+                size += sz;
+            }
+        }
+    }
+    return size;
+}
+
+mp_obj_tuple_t * shared_modules_struct_unpack_from(const char * fmt, byte *p, byte *end_p) {
+
+  char fmt_type = get_fmt_type(&fmt);
+  mp_uint_t num_items = calcsize_items(fmt);
+  mp_obj_tuple_t *res = MP_OBJ_TO_PTR(mp_obj_new_tuple(num_items, NULL));
+
+  for (uint i = 0; i < num_items;) {
+      mp_uint_t sz = 1;
+      if (unichar_isdigit(*fmt)) {
+          sz = get_fmt_num(&fmt);
+      }
+      if (p + sz > end_p) {
+          mp_raise_ValueError("buffer too small");
+      }
+      mp_obj_t item;
+      if (*fmt == 's') {
+          item = mp_obj_new_bytes(p, sz);
+          p += sz;
+          res->items[i++] = item;
+      } else {
+          while (sz--) {
+              item = mp_binary_get_val(fmt_type, *fmt, &p);
+              res->items[i++] = item;
+          }
+      }
+      fmt++;
+  }
+  return res;
+
+}
