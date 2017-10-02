@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2013, 2014 Damien P. George
  * Copyright (c) 2014 Paul Sokolovsky
+ * Copyright (c) 2017 Michael McWethy
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +34,7 @@
 #include "py/objtuple.h"
 #include "py/binary.h"
 #include "py/parsenum.h"
-#include "shared-bindings/struct/__init__.h"
+#include "shared-module/struct/__init__.h"
 
 //| :mod:`struct` --- manipulation of c-style data
 //| ========================================================
@@ -51,22 +52,6 @@
 //| Supported format codes: *b*, *B*, *h*, *H*, *i*, *I*, *l*, *L*, *q*, *Q*,
 //| *s*, *P*, *f*, *d* (the latter 2 depending on the floating-point support).
 
-
-/*
-    This module implements most of character typecodes from CPython, with
-    some extensions:
-
-    O - (Pointer to) an arbitrary Python object. This is useful for callback
-        data, etc. Note that you must keep reference to passed object in
-        your Python application, otherwise it may be garbage-collected,
-        and then when you get back this value from callback it may be
-        invalid (and lead to crash).
-    S - Pointer to a string (returned as a Python string). Note the
-        difference from "Ns", - the latter says "in this place of structure
-        is character data of up to N bytes length", while "S" means
-        "in this place of a structure is a pointer to zero-terminated
-        character data".
- */
 
  //| .. function:: calcsize(fmt)
  //|
@@ -95,7 +80,7 @@ STATIC mp_obj_t struct_pack(size_t n_args, const mp_obj_t *args) {
     byte *p = (byte*)vstr.buf;
     memset(p, 0, size);
     byte *end_p = &p[size];
-    shared_modules_struct_pack_into_internal(args[0], p, end_p, n_args - 1, &args[1]);
+    shared_modules_struct_pack_into(args[0], p, end_p, n_args - 1, &args[1]);
     return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(struct_pack_obj, 1, MP_OBJ_FUN_ARGS_MAX, struct_pack);
@@ -122,7 +107,7 @@ STATIC mp_obj_t struct_pack_into(size_t n_args, const mp_obj_t *args) {
     byte *end_p = &p[bufinfo.len];
     p += offset;
 
-    shared_modules_struct_pack_into_internal(args[0], p, end_p, n_args - 3, &args[3]);
+    shared_modules_struct_pack_into(args[0], p, end_p, n_args - 3, &args[3]);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(struct_pack_into_obj, 3, MP_OBJ_FUN_ARGS_MAX, struct_pack_into);

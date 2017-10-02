@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2016 Paul Sokolovsky
  * Copyright (c) 2017 Scott Shawcroft for Adafruit Industries
+ * Copyright (c) 2017 Michael McWethy
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,7 +63,7 @@ mp_uint_t get_fmt_num(const char **p) {
 }
 
 
-void shared_modules_struct_pack_into_internal(mp_obj_t fmt_in, byte *p, byte* end_p, size_t n_args, const mp_obj_t *args) {
+void shared_modules_struct_pack_into(mp_obj_t fmt_in, byte *p, byte* end_p, size_t n_args, const mp_obj_t *args) {
     const char *fmt = mp_obj_str_get_str(fmt_in);
     char fmt_type = get_fmt_type(&fmt);
 
