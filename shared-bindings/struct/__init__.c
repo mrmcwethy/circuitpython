@@ -34,6 +34,7 @@
 #include "py/objtuple.h"
 #include "py/binary.h"
 #include "py/parsenum.h"
+#include "shared-bindings/struct/__init__.h"
 #include "shared-module/struct/__init__.h"
 
 //| :mod:`struct` --- manipulation of c-style data
