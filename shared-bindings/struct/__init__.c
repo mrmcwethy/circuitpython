@@ -60,10 +60,8 @@
  //|
 
 STATIC mp_obj_t struct_calcsize(mp_obj_t fmt_in) {
-    const char *fmt = mp_obj_str_get_str(fmt_in);
-    char fmt_type = get_fmt_type(&fmt);
 
-    return MP_OBJ_NEW_SMALL_INT(shared_modules_struct_calcsize(fmt, fmt_type));
+    return MP_OBJ_NEW_SMALL_INT(shared_modules_struct_calcsize(fmt_in));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(struct_calcsize_obj, struct_calcsize);
 
@@ -131,7 +129,6 @@ STATIC mp_obj_t struct_unpack_from(size_t n_args, const mp_obj_t *args) {
     // unpack_from requires that the buffer be "big enough".
     // Since we implement unpack and unpack_from using the same function
     // we relax the "exact" requirement, and only implement "big enough".
-    const char *fmt = mp_obj_str_get_str(args[0]);
     mp_buffer_info_t bufinfo;
     mp_get_buffer_raise(args[1], &bufinfo, MP_BUFFER_READ);
     byte *p = bufinfo.buf;
@@ -150,7 +147,7 @@ STATIC mp_obj_t struct_unpack_from(size_t n_args, const mp_obj_t *args) {
         p += offset;
     }
 
-    return MP_OBJ_FROM_PTR(shared_modules_struct_unpack_from(fmt, p, end_p));
+    return MP_OBJ_FROM_PTR(shared_modules_struct_unpack_from(args[0] , p, end_p));
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(struct_unpack_from_obj, 2, 3, struct_unpack_from);
 

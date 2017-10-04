@@ -32,6 +32,12 @@
 #include "py/binary.h"
 #include "py/parsenum.h"
 
+void struct_validate_format(char fmt) {
+    if( fmt == 'S' || fmt == 'O') {
+        mp_raise_ValueError("struct: 'S' and 'O' are not supported format types");
+    }
+}
+
 char get_fmt_type(const char **fmt) {
     char t = **fmt;
     switch (t) {
@@ -72,8 +78,10 @@ void shared_modules_struct_pack_into(mp_obj_t fmt_in, byte *p, byte* end_p, size
         mp_uint_t sz = 1;
         if (*fmt == '\0') {
             // more arguments given than used by format string; CPython raises struct.error here
-            break;
+            mp_raise_ValueError("struct: too many arguments with the given format");
         }
+        struct_validate_format(*fmt);
+
         if (unichar_isdigit(*fmt)) {
             sz = get_fmt_num(&fmt);
         }
@@ -116,9 +124,15 @@ mp_uint_t calcsize_items(const char *fmt) {
     return cnt;
 }
 
-mp_uint_t shared_modules_struct_calcsize(const char *fmt, char fmt_type) {
+mp_uint_t shared_modules_struct_calcsize(mp_obj_t fmt_in) {
+    const char *fmt = mp_obj_str_get_str(fmt_in);
+    char fmt_type = get_fmt_type(&fmt);
+
     mp_uint_t size;
     for (size = 0; *fmt; fmt++) {
+
+        struct_validate_format(*fmt);
+
         mp_uint_t cnt = 1;
         if (unichar_isdigit(*fmt)) {
             cnt = get_fmt_num(&fmt);
@@ -139,14 +153,19 @@ mp_uint_t shared_modules_struct_calcsize(const char *fmt, char fmt_type) {
     return size;
 }
 
-mp_obj_tuple_t * shared_modules_struct_unpack_from(const char * fmt, byte *p, byte *end_p) {
 
+mp_obj_tuple_t * shared_modules_struct_unpack_from(mp_obj_t fmt_in, byte *p, byte *end_p) {
+
+  const char *fmt = mp_obj_str_get_str(fmt_in);
   char fmt_type = get_fmt_type(&fmt);
   mp_uint_t num_items = calcsize_items(fmt);
   mp_obj_tuple_t *res = MP_OBJ_TO_PTR(mp_obj_new_tuple(num_items, NULL));
 
   for (uint i = 0; i < num_items;) {
       mp_uint_t sz = 1;
+
+      struct_validate_format(*fmt);
+
       if (unichar_isdigit(*fmt)) {
           sz = get_fmt_num(&fmt);
       }
