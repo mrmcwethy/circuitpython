@@ -221,7 +221,7 @@ extern const struct _mp_obj_module_t usb_hid_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_os), (mp_obj_t)&os_module }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_random), (mp_obj_t)&random_module }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_struct), (mp_obj_t)&struct_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_time), (mp_obj_t)&time_module }
+    { MP_OBJ_NEW_QSTR(MP_QSTR_time), (mp_obj_t)&time_module },
     EXTRA_BUILTIN_MODULES
 
 #define MICROPY_PORT_BUILTIN_DEBUG_MODULES \
