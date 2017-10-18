@@ -3,10 +3,6 @@
 #ifndef __INCLUDED_MPCONFIGPORT_H
 #define __INCLUDED_MPCONFIGPORT_H
 
-#define PORT_HEAP_SIZE (16384 + 4096)
-
-#define MICROPY_PY_SYS_PLATFORM                     "Atmel SAMD21"
-
 #define MICROPY_OBJ_REPR            (MICROPY_OBJ_REPR_C)
 
 // options to control how MicroPython is built
@@ -60,7 +56,7 @@
 #define MICROPY_PY_IO               (0)
 #define MICROPY_PY_URANDOM          (0)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
-#define MICROPY_PY_STRUCT           (1)
+#define MICROPY_PY_STRUCT           (0)
 #define MICROPY_PY_SYS              (1)
 // If you change MICROPY_LONGINT_IMPL, also change MPY_TOOL_LONGINT_IMPL in mpconfigport.mk.
 #define MICROPY_LONGINT_IMPL        (MICROPY_LONGINT_IMPL_NONE)
@@ -138,10 +134,14 @@ typedef long mp_off_t;
 
 #ifdef SAMD21
 #define CIRCUITPY_MCU_FAMILY samd21
+#define MICROPY_PY_SYS_PLATFORM                     "Atmel SAMD21"
+#define PORT_HEAP_SIZE (16384 + 4096)
 #endif
 
 #ifdef SAMD51
 #define CIRCUITPY_MCU_FAMILY samd51
+#define MICROPY_PY_SYS_PLATFORM                     "MicroChip SAMD51"
+#define PORT_HEAP_SIZE (0x20000) // 128KiB
 #endif
 
 // extra built in modules to add to the list of known ones
@@ -157,12 +157,14 @@ extern const struct _mp_obj_module_t board_module;
 extern const struct _mp_obj_module_t os_module;
 extern const struct _mp_obj_module_t random_module;
 extern const struct _mp_obj_module_t storage_module;
+extern const struct _mp_obj_module_t struct_module;
 extern const struct _mp_obj_module_t time_module;
 extern const struct _mp_obj_module_t cpy_nvm_module;
 extern const struct _mp_obj_module_t neopixel_write_module;
 extern const struct _mp_obj_module_t uheap_module;
 extern const struct _mp_obj_module_t ustack_module;
 extern const struct _mp_obj_module_t samd_module;
+extern const struct _mp_obj_module_t gamepad_module;
 extern const struct _mp_obj_module_t touchio_module;
 extern const struct _mp_obj_module_t usb_hid_module;
 
@@ -182,6 +184,8 @@ extern const struct _mp_obj_module_t usb_hid_module;
     #define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
     #define MICROPY_PY_SYS_MAXSIZE      (1)
     #define MICROPY_CPYTHON_COMPAT      (1)
+    // Scan gamepad every 32ms
+    #define CIRCUITPY_GAMEPAD_TICKS 0x1f
 
     #define EXTRA_BUILTIN_MODULES
 //        { MP_OBJ_NEW_QSTR(MP_QSTR_audioio), (mp_obj_t)&audioio_module },
@@ -203,10 +207,9 @@ extern const struct _mp_obj_module_t usb_hid_module;
 // { MP_OBJ_NEW_QSTR(MP_QSTR_touchio), (mp_obj_t)&touchio_module },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_analogio), (mp_obj_t)&analogio_module },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_busio), (mp_obj_t)&busio_module },
+//    { MP_OBJ_NEW_QSTR(MP_QSTR_gamepad),(mp_obj_t)&gamepad_module },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_neopixel_write),(mp_obj_t)&neopixel_write_module },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_usb_hid),(mp_obj_t)&usb_hid_module },
-//    { MP_OBJ_NEW_QSTR(MP_QSTR_os), (mp_obj_t)&os_module },
-//    { MP_OBJ_NEW_QSTR(MP_QSTR_random), (mp_obj_t)&random_module },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_storage), (mp_obj_t)&storage_module },
 //    { MP_OBJ_NEW_QSTR(MP_QSTR_samd),(mp_obj_t)&samd_module },
 
@@ -215,6 +218,9 @@ extern const struct _mp_obj_module_t usb_hid_module;
     { MP_OBJ_NEW_QSTR(MP_QSTR_board), (mp_obj_t)&board_module }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_digitalio), (mp_obj_t)&digitalio_module }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_microcontroller), (mp_obj_t)&microcontroller_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_os), (mp_obj_t)&os_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_random), (mp_obj_t)&random_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_struct), (mp_obj_t)&struct_module }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_time), (mp_obj_t)&time_module },
     EXTRA_BUILTIN_MODULES
 

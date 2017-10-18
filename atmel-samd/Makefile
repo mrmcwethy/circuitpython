@@ -79,21 +79,38 @@ BASE_CFLAGS = \
 	-fshort-enums \
 	--param max-inline-insns-single=500
 
+# NDEBUG disables assert() statements. This reduces code size pretty dramatically, per tannewt.
+
+ifeq ($(CHIP_FAMILY), samd21)
+CFLAGS = -Os -DNDEBUG
+endif
+
+ifeq ($(CHIP_FAMILY), samd51)
+CFLAGS = -O2 -DNDEBUG
+endif
+
 #Debugging/Optimization
 ifeq ($(DEBUG), 1)
-# NDEBUG disables assert() statements. This reduces code size pretty dramatically, per tannewt.
-# Turn on Python modules useful for debugging (e.g. uheap, ustack).
-CFLAGS = -O1 -ggdb -DNDEBUG
-ifeq ($(CHIP_FAMILY), samd21)
-CFLAGS += -DENABLE_MICRO_TRACE_BUFFER
-endif
+  # Turn on Python modules useful for debugging (e.g. uheap, ustack).
+  CFLAGS += -ggdb
+  ifeq ($(CHIP_FAMILY), samd21)
+    CFLAGS += -DENABLE_MICRO_TRACE_BUFFER
+  endif
 else
-# -finline-limit can shrink the image size. -finline-limit=80 or so is similar to not having it on.
-# There is no simple default value, though.
-CFLAGS = -Os -DNDEBUG -flto -finline-limit=49
+  # -finline-limit can shrink the image size.
+  # -finline-limit=80 or so is similar to not having it on.
+  # There is no simple default value, though.
+  ifeq ($(FLASH_IMPL),internal_flash.c)
+    ifeq ($(CHIP_FAMILY), samd21)
+### TODO(dhalbert): disable for now; breaks things in 3.0.0 build(e.g. deinit checking is disabled)
+#      CFLAGS += -finline-limit=19
+    endif
+  endif
+  CFLAGS += -flto
 endif
 
 CFLAGS += $(INC) -Wall -Werror -std=gnu11 -nostdlib $(BASE_CFLAGS) $(CFLAGS_MOD) $(COPT)
+
 
 ifeq ($(CHIP_FAMILY), samd21)
 CFLAGS += \
@@ -109,8 +126,9 @@ CFLAGS += \
 	-mthumb \
 	-mabi=aapcs-linux \
 	-mlong-calls \
+	-mtune=cortex-m4 \
 	-mcpu=cortex-m4 \
-	-mfloat-abi=softfp \
+	-mfloat-abi=hard \
 	-mfpu=fpv4-sp-d16 \
 	-DSAMD51
 endif
@@ -150,11 +168,13 @@ SRC_ASF := \
 	gcc/system_$(CHIP_FAMILY).c \
 	hal/src/hal_atomic.c \
 	hal/src/hal_delay.c \
+	hal/src/hal_flash.c \
 	hal/src/hal_sleep.c \
 	hal/src/hal_timer.c \
 	hal/src/hal_usb_device.c \
 	hpl/core/hpl_init.c \
 	hpl/gclk/hpl_gclk.c \
+	hpl/nvmctrl/hpl_nvmctrl.c \
 	hpl/pm/hpl_pm.c \
 	hpl/rtc/hpl_rtc.c \
 	hpl/systick/hpl_systick.c \
@@ -172,10 +192,12 @@ SRC_ASF += \
 
 else ifeq ($(CHIP_FAMILY), samd51)
 SRC_ASF += \
+    hal/src/hal_rand_sync.c \
 	hpl/core/hpl_core_m4.c \
 	hpl/mclk/hpl_mclk.c \
 	hpl/osc32kctrl/hpl_osc32kctrl.c \
 	hpl/oscctrl/hpl_oscctrl.c \
+	hpl/trng/hpl_trng.c \
 
 endif
 
@@ -184,7 +206,6 @@ SRC_ASF := $(addprefix asf4/$(CHIP_FAMILY)/, $(SRC_ASF))
 # Skip this source for now.
 #	access_vfs.c \
 	shared_dma.c \
-	$(FLASH_IMPL) \
 
 SRC_C = \
 	background.c \
@@ -195,6 +216,7 @@ SRC_C = \
 	$(CHIP_FAMILY)_pins.c \
 	tick.c \
 	usb.c \
+	$(FLASH_IMPL) \
 	bindings/samd/__init__.c \
 	boards/$(BOARD)/board.c \
 	boards/$(BOARD)/pins.c \
@@ -218,6 +240,7 @@ SRC_COMMON_HAL = \
 	microcontroller/__init__.c \
 	microcontroller/Pin.c \
 	microcontroller/Processor.c \
+	os/__init__.c \
 	time/__init__.c
 #	analogio/__init__.c \
 	analogio/AnalogIn.c \
@@ -233,7 +256,6 @@ SRC_COMMON_HAL = \
 	neopixel_write/__init__.c \
 	nvm/__init__.c \
 	nvm/ByteArray.c \
-	os/__init__.c \
 	pulseio/__init__.c \
 	pulseio/PulseIn.c \
 	pulseio/PulseOut.c \
@@ -250,7 +272,8 @@ SRC_BINDINGS_ENUMS = \
 	digitalio/Direction.c \
 	digitalio/DriveMode.c \
 	digitalio/Pull.c \
-	help.c
+	help.c \
+	util.c
 
 SRC_COMMON_HAL_EXPANDED = $(addprefix shared-bindings/, $(SRC_COMMON_HAL)) \
                           $(addprefix shared-bindings/, $(SRC_BINDINGS_ENUMS)) \
@@ -262,9 +285,12 @@ SRC_SHARED_MODULE = \
 	bitbangio/OneWire.c \
 	bitbangio/SPI.c \
 	busio/OneWire.c \
+	gamepad/__init__.c \
+	gamepad/GamePad.c \
 	os/__init__.c \
 	random/__init__.c \
 	storage/__init__.c \
+	struct/__init__.c \
 	uheap/__init__.c \
 	ustack/__init__.c
 
