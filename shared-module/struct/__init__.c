@@ -34,7 +34,7 @@
 
 void struct_validate_format(char fmt) {
     if( fmt == 'S' || fmt == 'O') {
-        mp_raise_ValueError("struct: 'S' and 'O' are not supported format types");
+        mp_raise_RuntimeError("'S' and 'O' are not supported format types");
     }
 }
 
@@ -78,7 +78,7 @@ void shared_modules_struct_pack_into(mp_obj_t fmt_in, byte *p, byte* end_p, size
         mp_uint_t sz = 1;
         if (*fmt == '\0') {
             // more arguments given than used by format string; CPython raises struct.error here
-            mp_raise_ValueError("struct: too many arguments with the given format");
+            mp_raise_RuntimeError("too many arguments provided with the given format");
         }
         struct_validate_format(*fmt);
 
@@ -86,7 +86,7 @@ void shared_modules_struct_pack_into(mp_obj_t fmt_in, byte *p, byte* end_p, size
             sz = get_fmt_num(&fmt);
         }
         if (p + sz > end_p) {
-            mp_raise_ValueError("buffer too small");
+            mp_raise_RuntimeError("buffer too small");
         }
 
         if (*fmt == 's') {
@@ -170,7 +170,7 @@ mp_obj_tuple_t * shared_modules_struct_unpack_from(mp_obj_t fmt_in, byte *p, byt
           sz = get_fmt_num(&fmt);
       }
       if (p + sz > end_p) {
-          mp_raise_ValueError("buffer too small");
+          mp_raise_RuntimeError("buffer too small");
       }
       mp_obj_t item;
       if (*fmt == 's') {
